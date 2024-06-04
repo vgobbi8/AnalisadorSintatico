@@ -118,7 +118,13 @@ namespace AnalisadorSintatico
                 throw new Exception("Unexpected token: " + _currentToken.Lexeme);
             }
         }
-        public void Consume(TokenTypeEnum type) {
+
+        //Consome o token esperado. 
+        //De acordo com cada função, o token esperado é diferente.
+        //Por exeplo, para uma deckaração de função, o token esperado é sempre: RESERVED ID LPAREN RPAREN. Ex.: void funcaoTeste(), int funcaoTeste()
+        //Neste caso, a nossa linguagem não aceita parâmetros e nem retorno de tipos definidos pelo usuário
+        public void Consume(TokenTypeEnum type)
+        {
             if (_currentToken.Type.TokenTypeEnum == type)
             {
                 _currentToken = _lexer.NextToken();

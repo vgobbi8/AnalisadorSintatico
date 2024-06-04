@@ -35,8 +35,8 @@ namespace AnalisadorSintatico
         public static TokenType TokenATTR = new(TokenTypeEnum.ATTR, @"\=");
         public static TokenType TokenID = new(TokenTypeEnum.ID, @"[a-zA-Z_][a-zA-Z0-9_]*");
         public static TokenType TokenNUM = new(TokenTypeEnum.NUM, @"[0-9]+");
-        public static TokenType TokenOP = new(TokenTypeEnum.OP, @"[<>=]");
-        public static TokenType TokenRESERVED = new(TokenTypeEnum.RESERVED, @"(if|else|while|for|print|return|void)");
+        public static TokenType TokenOP = new(TokenTypeEnum.OP, @"([<]{1}[>]{1})|([==]{2})");
+        public static TokenType TokenRESERVED = new(TokenTypeEnum.RESERVED, @"(if|else|while|for|print|return|void|int|real|char)");
         public static TokenType TokenLParen = new(TokenTypeEnum.LParen, @"\(");
         public static TokenType TokenRParen = new(TokenTypeEnum.RParen, @"\)");
         public static TokenType TokenLBrace = new(TokenTypeEnum.LBrace, @"\{");
@@ -47,6 +47,7 @@ namespace AnalisadorSintatico
 
         public static TokenType CheckTokenType(string input)
         {
+
             if (Regex.IsMatch(input, TokenADD.RegexStr))
             {
                 return TokenADD;
@@ -71,6 +72,10 @@ namespace AnalisadorSintatico
             {
                 return TokenATTR;
             }
+            else if (Regex.IsMatch(input, TokenRESERVED.RegexStr))
+            {
+                return TokenRESERVED;
+            }
             else if (Regex.IsMatch(input, TokenID.RegexStr))
             {
                 return TokenID;
@@ -83,10 +88,7 @@ namespace AnalisadorSintatico
             {
                 return TokenOP;
             }
-            else if (Regex.IsMatch(input, TokenRESERVED.RegexStr))
-            {
-                return TokenRESERVED;
-            }
+
             else if (Regex.IsMatch(input, TokenLParen.RegexStr))
             {
                 return TokenLParen;

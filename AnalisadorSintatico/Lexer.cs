@@ -36,13 +36,17 @@ namespace AnalisadorSintatico
 
         public Token NextToken()
         {
-
-
             if (_position >= _input.Length)
             {
                 return new Token(TokenType.TokenEOF, null);
             }
-            string[] tokens = Regex.Split(_input, @"\s+");
+
+
+
+            string[] cleanTokens = Regex.Split(_input, @"(\s+)");
+            string newString = String.Join("", cleanTokens);
+            string[] tokens = Regex.Split(newString, @"(\s+)|([{};=+\-*/%()])");
+            tokens = tokens.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
             string currentToken = tokens[_position].ToString();
             _position++;
 
@@ -51,7 +55,6 @@ namespace AnalisadorSintatico
             {
                 return NextToken();
             }
-
 
             if (Regex.IsMatch(currentToken, @"//"))
             {
@@ -62,54 +65,59 @@ namespace AnalisadorSintatico
                 }
                 return NextToken();
             }
-            if (Regex.IsMatch(currentToken, TokenType.TokenRESERVED.RegexStr.ToString()))
-            {
-                return new Token(TokenType.TokenRESERVED, currentToken);
-            }
-            else if (Regex.IsMatch(currentToken, @"[a-zA-Z_]"))
-            {
-                return new Token(TokenType.TokenID, currentToken);
-            }
-            else if (Regex.IsMatch(currentToken, @"[0-9]"))
-            {
-                return new Token(TokenType.TokenNUM, currentToken);
-            }
-            else if (Regex.IsMatch(currentToken, @"[<>=]"))
-            {
-                return new Token(TokenType.TokenOP, currentToken);
-            }
-            else if (Regex.IsMatch(currentToken, @"[+*/%-]"))
-            {
-                return new Token(TokenType.TokenADD, currentToken);
-            }
-            else if (Regex.IsMatch(currentToken, @"="))
-            {
-                return new Token(TokenType.TokenATTR, currentToken);
-            }
-            else if (Regex.IsMatch(currentToken, @"[(]"))
-            {
-                return new Token(TokenType.TokenLParen, currentToken);
-            }
-            else if (Regex.IsMatch(currentToken, @"[)]"))
-            {
-                return new Token(TokenType.TokenRParen, currentToken);
-            }
-            else if (Regex.IsMatch(currentToken, @"[{]"))
-            {
-                return new Token(TokenType.TokenLBrace, currentToken);
-            }
-            else if (Regex.IsMatch(currentToken, @"[}]"))
-            {
-                return new Token(TokenType.TokenRBrace, currentToken);
-            }
-            else if (Regex.IsMatch(currentToken, @";"))
-            {
-                return new Token(TokenType.TokenSColon, currentToken);
-            }
-            else if (Regex.IsMatch(currentToken, @"\"".*?\"""))
-            {
-                return new Token(TokenType.TokenLiteral, currentToken);
-            }
+            var tokenTypeEnum = TokenType.CheckTokenType(currentToken);
+            return (new Token(tokenTypeEnum, currentToken));
+
+            //if (Regex.IsMatch(currentToken, TokenType.TokenRESERVED.RegexStr.ToString()))
+            //{
+            //    return new Token(TokenType.TokenRESERVED, currentToken);
+            //}
+            //else if (Regex.IsMatch(currentToken, @"[a-zA-Z_]"))
+            //{
+            //    return new Token(TokenType.TokenID, currentToken);
+
+            //}
+            //else if (Regex.IsMatch(currentToken, @"[0-9]"))
+            //{
+            //    return new Token(TokenType.TokenNUM, currentToken);
+            //}
+            //else if (Regex.IsMatch(currentToken, @"[<>=]"))
+            //{
+            //    return new Token(TokenType.TokenOP, currentToken);
+            //}
+            //else if (Regex.IsMatch(currentToken, @"[+*/%-]"))
+            //{
+            //    return new Token(TokenType.TokenADD, currentToken);
+            //}
+            //else if (Regex.IsMatch(currentToken, @"="))
+            //{
+            //    return new Token(TokenType.TokenATTR, currentToken);
+            //}
+            //else if (Regex.IsMatch(currentToken, @"[(]"))
+            //{
+            //    return new Token(TokenType.TokenLParen, currentToken);
+            //}
+            //else if (Regex.IsMatch(currentToken, @"[)]"))
+            //{
+            //    return new Token(TokenType.TokenRParen, currentToken);
+            //}
+            //else if (Regex.IsMatch(currentToken, @"[{]"))
+            //{
+            //    return new Token(TokenType.TokenLBrace, currentToken);
+            //}
+            //else if (Regex.IsMatch(currentToken, @"[}]"))
+            //{
+            //    return new Token(TokenType.TokenRBrace, currentToken);
+            //}
+            //else if (Regex.IsMatch(currentToken, @";"))
+            //{
+            //    return new Token(TokenType.TokenSColon, currentToken);
+            //}
+            //else if (Regex.IsMatch(currentToken, @"\"".*?\"""))
+            //{
+            //    return new Token(TokenType.TokenLiteral, currentToken);
+            //}
+
             throw new Exception("Invalid character");
         }
 
@@ -117,7 +125,10 @@ namespace AnalisadorSintatico
         {
 
             //It's necessary to clear the empty spaces, so we will split the input by the spaces
-            string[] tokens = Regex.Split(_input, @"\s+");
+            string[] cleanTokens = Regex.Split(_input, @"(\s+)");
+            string newString = String.Join("", cleanTokens);
+            string[] tokens = Regex.Split(newString, @"(\s+)|([{};=+\-*/%()])");
+            tokens = tokens.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
             var lstTokens = new List<Token>();
             foreach (var token in tokens)
             {
