@@ -142,4 +142,29 @@ namespace AnalisadorSintatico
             return lstTokens;
         }
     }
+
+
+
+    public enum TokenTypeEnum2
+    {
+        Var, Int, Real, Identifier, Number, Semicolon, Comma,
+        Assign, Plus, Minus, Multiply, Divide, Power, Less, Greater, LessEqual, GreaterEqual, Equal, NotEqual,
+        While, If, Else, OpenParen, CloseParen, OpenBrace, CloseBrace, EndOfFile, Unknown
+    }
+
+    public class Token2
+    {
+        public TokenType Type { get; }
+        public string Lexeme { get; }
+
+        public Token2(TokenType type, string lexeme)
+        {
+            Type = type;
+            Lexeme = lexeme;
+        }
+
+        public override string ToString() => $"{Type} ({Lexeme})";
+    }
+
+
 }

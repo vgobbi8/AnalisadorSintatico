@@ -137,7 +137,7 @@ namespace AnalisadorSintatico
 
         public void Program()
         {
-            FunctionDeclaration();
+           // FunctionDeclaration();
             MainFunction();
         }
 
