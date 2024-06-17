@@ -7,8 +7,6 @@ using static AnalisadorSintatico.Enums;
 
 namespace AnalisadorSintatico
 {
-
-
     public class Parser
     {
         private readonly List<Token> tokens;

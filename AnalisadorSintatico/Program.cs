@@ -27,11 +27,26 @@ List<Token> tokens = lexer.ScanTokens();
 
 try
 {
-    Parser parser = new Parser(tokens);
-    parser.Parse();
-    Console.WriteLine("Parsing completed successfully.");
+    ParserAST parser = new ParserAST(tokens);
+    var ast = parser.Parse();
+
+    CodeGenerator generator = new CodeGenerator();
+    ast.GenerateCode(generator);
+
+    Console.WriteLine("Code generation completed successfully.");
 }
 catch (Exception ex)
 {
     Console.WriteLine($"Parsing error: {ex.Message}");
 }
+
+//try
+//{
+//    Parser parser = new Parser(tokens);
+//    parser.Parse();
+//    Console.WriteLine("Parsing completed successfully.");
+//}
+//catch (Exception ex)
+//{
+//    Console.WriteLine($"Parsing error: {ex.Message}");
+//}
