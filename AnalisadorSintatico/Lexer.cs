@@ -7,157 +7,23 @@ using System.Threading.Tasks;
 using static AnalisadorSintatico.Enums;
 namespace AnalisadorSintatico
 {
-    public class Lexer
-    {
-        private string _input;
-        private int _position;
+    using System;
+    using System.Collections.Generic;
+    using System.Text.RegularExpressions;
 
-        public Lexer(string input)
-        {
-            _input = input;
-            _position = 0;
-        }
-        //Entendendo o Lexer
-        // 1 - O lexer irá obter um input 
-        // 2 - O lexer irá buscar os tokens no input
-        // 3 - O Token é uma classe que irá representar o token encontrado
-        // 4 - O token possui um tipo e o seu lexema. Por exemplo, o token de um número possui o tipo NUM e o lexema é o número encontrado
-        // Outro exemplo mais complexo é o token de um identificador, que possui o tipo ID e o lexema é o identificador encontrado (ex: x, y, z)
-        // Pode ser também um token de um operador, que possui o tipo OP e o lexema é o operador encontrado (ex: +, -, *, /)
-
-
-
-        //Entendendo a lógica do parser
-        // 1 - O parser depende do lexer, que irá fornecer os tokens
-        // 2 - O parser irá analisar os tokens fornecidos pelo lexer
-        // 3 - O parser irá verificar se a sequência de tokens é válida
-        // 4 - O parser irá gerar uma árvore sintática ou executar ações com base nos tokens fornecidos
-
-
-        public Token NextToken()
-        {
-            if (_position >= _input.Length)
-            {
-                return new Token(TokenType.TokenEOF, null);
-            }
-
-
-
-            string[] cleanTokens = Regex.Split(_input, @"(\s+)");
-            string newString = String.Join("", cleanTokens);
-            string[] tokens = Regex.Split(newString, @"(\s+)|([{};=+\-*/%()])");
-            tokens = tokens.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
-            string currentToken = tokens[_position].ToString();
-            _position++;
-
-            //It's necessary to clear the empty spaces
-            if (currentToken == "")
-            {
-                return NextToken();
-            }
-
-            if (Regex.IsMatch(currentToken, @"//"))
-            {
-                while (currentToken != "\n")
-                {
-                    currentToken = _input[_position].ToString();
-                    _position++;
-                }
-                return NextToken();
-            }
-            var tokenTypeEnum = TokenType.CheckTokenType(currentToken);
-            return (new Token(tokenTypeEnum, currentToken));
-
-            //if (Regex.IsMatch(currentToken, TokenType.TokenRESERVED.RegexStr.ToString()))
-            //{
-            //    return new Token(TokenType.TokenRESERVED, currentToken);
-            //}
-            //else if (Regex.IsMatch(currentToken, @"[a-zA-Z_]"))
-            //{
-            //    return new Token(TokenType.TokenID, currentToken);
-
-            //}
-            //else if (Regex.IsMatch(currentToken, @"[0-9]"))
-            //{
-            //    return new Token(TokenType.TokenNUM, currentToken);
-            //}
-            //else if (Regex.IsMatch(currentToken, @"[<>=]"))
-            //{
-            //    return new Token(TokenType.TokenOP, currentToken);
-            //}
-            //else if (Regex.IsMatch(currentToken, @"[+*/%-]"))
-            //{
-            //    return new Token(TokenType.TokenADD, currentToken);
-            //}
-            //else if (Regex.IsMatch(currentToken, @"="))
-            //{
-            //    return new Token(TokenType.TokenATTR, currentToken);
-            //}
-            //else if (Regex.IsMatch(currentToken, @"[(]"))
-            //{
-            //    return new Token(TokenType.TokenLParen, currentToken);
-            //}
-            //else if (Regex.IsMatch(currentToken, @"[)]"))
-            //{
-            //    return new Token(TokenType.TokenRParen, currentToken);
-            //}
-            //else if (Regex.IsMatch(currentToken, @"[{]"))
-            //{
-            //    return new Token(TokenType.TokenLBrace, currentToken);
-            //}
-            //else if (Regex.IsMatch(currentToken, @"[}]"))
-            //{
-            //    return new Token(TokenType.TokenRBrace, currentToken);
-            //}
-            //else if (Regex.IsMatch(currentToken, @";"))
-            //{
-            //    return new Token(TokenType.TokenSColon, currentToken);
-            //}
-            //else if (Regex.IsMatch(currentToken, @"\"".*?\"""))
-            //{
-            //    return new Token(TokenType.TokenLiteral, currentToken);
-            //}
-
-            throw new Exception("Invalid character");
-        }
-
-        public List<Token> Tokenize()
-        {
-
-            //It's necessary to clear the empty spaces, so we will split the input by the spaces
-            string[] cleanTokens = Regex.Split(_input, @"(\s+)");
-            string newString = String.Join("", cleanTokens);
-            string[] tokens = Regex.Split(newString, @"(\s+)|([{};=+\-*/%()])");
-            tokens = tokens.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
-            var lstTokens = new List<Token>();
-            foreach (var token in tokens)
-            {
-                if (token == "")
-                {
-                    continue;
-                }
-                var tokenTypeEnum = TokenType.CheckTokenType(token);
-                lstTokens.Add(new Token(tokenTypeEnum, token));
-            }
-            return lstTokens;
-        }
-    }
-
-
-
-    public enum TokenTypeEnum2
+    public enum TokenType
     {
         Var, Int, Real, Identifier, Number, Semicolon, Comma,
         Assign, Plus, Minus, Multiply, Divide, Power, Less, Greater, LessEqual, GreaterEqual, Equal, NotEqual,
         While, If, Else, OpenParen, CloseParen, OpenBrace, CloseBrace, EndOfFile, Unknown
     }
 
-    public class Token2
+    public class Token
     {
         public TokenType Type { get; }
         public string Lexeme { get; }
 
-        public Token2(TokenType type, string lexeme)
+        public Token(TokenType type, string lexeme)
         {
             Type = type;
             Lexeme = lexeme;
@@ -165,6 +31,116 @@ namespace AnalisadorSintatico
 
         public override string ToString() => $"{Type} ({Lexeme})";
     }
+
+
+    public class Lexer
+    {
+        private static readonly Dictionary<string, TokenType> keywords = new Dictionary<string, TokenType>
+    {
+        { "var", TokenType.Var },
+        { "int", TokenType.Int },
+        { "real", TokenType.Real },
+        { "while", TokenType.While },
+        { "if", TokenType.If },
+        { "else", TokenType.Else }
+    };
+
+        private static readonly List<(Regex, TokenType)> tokenDefinitions = new List<(Regex, TokenType)>
+    {
+        (new Regex(@"^var\b"), TokenType.Var),
+        (new Regex(@"^int\b"), TokenType.Int),
+        (new Regex(@"^real\b"), TokenType.Real),
+        (new Regex(@"^while\b"), TokenType.While),
+        (new Regex(@"^if\b"), TokenType.If),
+        (new Regex(@"^else\b"), TokenType.Else),
+        (new Regex(@"^[a-zA-Z_]\w*"), TokenType.Identifier),
+        (new Regex(@"^\d+(\.\d+)?"), TokenType.Number),
+        (new Regex(@"^;"), TokenType.Semicolon),
+        (new Regex(@"^,"), TokenType.Comma),
+        (new Regex(@"^="), TokenType.Assign),
+        (new Regex(@"^\+"), TokenType.Plus),
+        (new Regex(@"^-"), TokenType.Minus),
+        (new Regex(@"^\*"), TokenType.Multiply),
+        (new Regex(@"^/"), TokenType.Divide),
+        (new Regex(@"^\^"), TokenType.Power),
+        (new Regex(@"^<="), TokenType.LessEqual),
+        (new Regex(@"^>="), TokenType.GreaterEqual),
+        (new Regex(@"^=="), TokenType.Equal),
+        (new Regex(@"^!="), TokenType.NotEqual),
+        (new Regex(@"^<"), TokenType.Less),
+        (new Regex(@"^>"), TokenType.Greater),
+        (new Regex(@"^\("), TokenType.OpenParen),
+        (new Regex(@"^\)"), TokenType.CloseParen),
+        (new Regex(@"^\{"), TokenType.OpenBrace),
+        (new Regex(@"^\}"), TokenType.CloseBrace),
+    };
+
+        private readonly string source;
+        private int current = 0;
+
+        public Lexer(string source)
+        {
+            this.source = source;
+        }
+
+        public List<Token> ScanTokens()
+        {
+            List<Token> tokens = new List<Token>();
+            while (!IsAtEnd())
+            {
+                SkipWhitespaceAndComments();
+                if (IsAtEnd()) break;
+                Token token = ScanToken();
+                if (token.Type != TokenType.Unknown)
+                {
+                    tokens.Add(token);
+                }
+                else
+                {
+                    Console.WriteLine($"Unexpected token: {token.Lexeme}");
+                    current++;
+                }
+            }
+            tokens.Add(new Token(TokenType.EndOfFile, ""));
+            return tokens;
+        }
+
+        private void SkipWhitespaceAndComments()
+        {
+            while (!IsAtEnd() && char.IsWhiteSpace(Peek()))
+            {
+                current++;
+            }
+        }
+
+        private Token ScanToken()
+        {
+            foreach (var (regex, type) in tokenDefinitions)
+            {
+                var match = regex.Match(source.Substring(current));
+                if (match.Success)
+                {
+                    current += match.Length;
+                    if (type == TokenType.Identifier && keywords.ContainsKey(match.Value))
+                    {
+                        return new Token(keywords[match.Value], match.Value);
+                    }
+                    if (type != TokenType.Unknown)
+                    {
+                        return new Token(type, match.Value);
+                    }
+                    break;
+                }
+            }
+
+            return new Token(TokenType.Unknown, source[current].ToString());
+        }
+
+        private bool IsAtEnd() => current >= source.Length;
+
+        private char Peek() => IsAtEnd() ? '\0' : source[current];
+    }
+
 
 
 }

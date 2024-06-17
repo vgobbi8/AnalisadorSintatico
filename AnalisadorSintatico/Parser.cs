@@ -8,258 +8,248 @@ using static AnalisadorSintatico.Enums;
 namespace AnalisadorSintatico
 {
 
+
     public class Parser
     {
-        private Lexer _lexer;
-        private Token _currentToken;
+        private readonly List<Token> tokens;
+        private int current = 0;
 
-        public Parser(Lexer lexer)
+        public Parser(List<Token> tokens)
         {
-            _lexer = lexer;
-            _currentToken = _lexer.NextToken();
+            this.tokens = tokens;
         }
+
+        private Token Advance()
+        {
+            if (!IsAtEnd()) current++;
+            return Previous();
+        }
+
+        private bool IsAtEnd() => Peek().Type == TokenType.EndOfFile;
+
+        private Token Peek() => tokens[current];
+
+        private Token Previous() => tokens[current - 1];
+
+        private bool Match(params TokenType[] types)
+        {
+            foreach (var type in types)
+            {
+                if (Check(type))
+                {
+                    Advance();
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool Check(TokenType type)
+        {
+            if (IsAtEnd()) return false;
+            return Peek().Type == type;
+        }
+
+        private Token Consume(TokenType type, string message)
+        {
+            if (Check(type)) return Advance();
+            throw new Exception(message);
+        }
+
+        // Implementação das regras da gramática
 
         public void Parse()
         {
-            Expression();
-            if (_currentToken.Type.TokenTypeEnum != TokenTypeEnum.EOF)
+            Prog();
+        }
+
+        private void Prog()
+        {
+            if (Match(TokenType.Var))
             {
-                throw new Exception("Unexpected token: " + _currentToken.Lexeme);
+                DVar();
+                ComL();
+            }
+            else
+            {
+                ComL();
             }
         }
 
-        private void Expression()
+        private void DVar()
+        {
+         //   Var();
+            while (Check(TokenType.Int) || Check(TokenType.Real))
+            {
+                Var();
+            }
+        }
+
+        private void Var()
+        {
+            TIPO();
+            Consume(TokenType.Identifier, "Expect identifier after type.");
+            VarI();
+        }
+
+        private void VarI()
+        {
+            if (Match(TokenType.Comma))
+            {
+                Consume(TokenType.Identifier, "Expect identifier after ','.");
+                VarI();
+            }
+            else
+            {
+                Consume(TokenType.Semicolon, "Expect ';' after variable declaration.");
+            }
+        }
+
+        private void TIPO()
+        {
+            if (Match(TokenType.Int, TokenType.Real))
+            {
+                // Do nothing, just match
+            }
+            else
+            {
+                throw new Exception("Expect type 'int' or 'real'.");
+            }
+        }
+
+        private void ComL()
+        {
+            while (!IsAtEnd() && !Check(TokenType.CloseBrace))
+            {
+                Com();
+            }
+        }
+
+        private void Com()
+        {
+            if (Match(TokenType.While))
+            {
+                CWhile();
+            }
+            else if (Match(TokenType.If))
+            {
+                CIf();
+            }
+            else if (Match(TokenType.Identifier))
+            {
+                Catr();
+            }
+            else
+            {
+                throw new Exception("Unexpected token in command list.");
+            }
+        }
+
+        private void CWhile()
+        {
+            Consume(TokenType.OpenParen, "Expect '(' after 'while'.");
+            ExprR();
+            Consume(TokenType.CloseParen, "Expect ')' after while condition.");
+            Consume(TokenType.OpenBrace, "Expect '{' before while block.");
+            ComL();
+            Consume(TokenType.CloseBrace, "Expect '}' after while block.");
+        }
+
+        private void CIf()
+        {
+            Consume(TokenType.OpenParen, "Expect '(' after 'if'.");
+            ExprR();
+            Consume(TokenType.CloseParen, "Expect ')' after if condition.");
+            Consume(TokenType.OpenBrace, "Expect '{' before if block.");
+            ComL();
+            Consume(TokenType.CloseBrace, "Expect '}' after if block.");
+            CElse();
+        }
+
+        private void CElse()
+        {
+            if (Match(TokenType.Else))
+            {
+                Consume(TokenType.OpenBrace, "Expect '{' before else block.");
+                ComL();
+                Consume(TokenType.CloseBrace, "Expect '}' after else block.");
+            }
+        }
+
+        private void Catr()
+        {
+            Consume(TokenType.Assign, "Expect '=' after identifier.");
+            Expr();
+            Consume(TokenType.Semicolon, "Expect ';' after expression.");
+        }
+
+        private void ExprR()
+        {
+            Expr();
+            ExprI();
+        }
+
+        private void ExprI()
+        {
+            if (Match(TokenType.Equal, TokenType.NotEqual, TokenType.Less, TokenType.Greater, TokenType.LessEqual, TokenType.GreaterEqual))
+            {
+                Expr();
+            }
+        }
+
+        private void Expr()
         {
             Term();
-            while (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.ADD || _currentToken.Type.TokenTypeEnum == TokenTypeEnum.SUB)
+            Expl();
+        }
+
+        private void Expl()
+        {
+            while (Match(TokenType.Plus, TokenType.Minus))
             {
-                if (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.ADD)
-                {
-                    Consume(TokenTypeEnum.ADD);
-                    Term();
-                }
-                else if (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.SUB)
-                {
-                    Consume(TokenTypeEnum.SUB);
-                    Term();
-                }
+                Term();
             }
         }
 
         private void Term()
         {
             Factor();
-            while (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.MUL || _currentToken.Type.TokenTypeEnum == TokenTypeEnum.DIV)
+            Terml();
+        }
+
+        private void Terml()
+        {
+            while (Match(TokenType.Multiply, TokenType.Divide))
             {
-                if (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.MUL)
-                {
-                    Consume(TokenTypeEnum.MUL);
-                    Factor();
-                }
-                else if (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.DIV)
-                {
-                    Consume(TokenTypeEnum.DIV);
-                    Factor();
-                }
+                Factor();
             }
         }
 
         private void Factor()
         {
-            if (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.NUM)
+            if (Match(TokenType.OpenParen))
             {
-                Consume(TokenTypeEnum.NUM);
+                Expr();
+                Consume(TokenType.CloseParen, "Expect ')' after expression.");
             }
-            else if (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.LParen)
+            else if (Match(TokenType.Identifier, TokenType.Number))
             {
-                Consume(TokenTypeEnum.LParen);
-                Expression();
-                Consume(TokenTypeEnum.RParen);
-            }
-            else if (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.RESERVED)
-            {
-                Consume(TokenTypeEnum.RESERVED);
+                Factorl();
             }
             else
             {
-                throw new Exception("Unexpected token: " + _currentToken.Lexeme);
+                throw new Exception("Expect expression.");
             }
         }
 
-        private void Consume(TokenTypeEnum type)
+        private void Factorl()
         {
-            if (_currentToken.Type.TokenTypeEnum == type)
+            if (Match(TokenType.Power))
             {
-                _currentToken = _lexer.NextToken();
-            }
-            else
-            {
-                throw new Exception("Unexpected token: " + _currentToken.Lexeme);
+                Consume(TokenType.Number, "Expect number after '^'.");
             }
         }
     }
-
-    public class Parser2
-    {
-        private Lexer _lexer;
-        private Token _currentToken;
-
-        public Parser2(Lexer lexer)
-        {
-            _lexer = lexer;
-            _currentToken = _lexer.NextToken();
-        }
-
-        public void Parse()
-        {
-            Program();
-            if (_currentToken.Type.TokenTypeEnum != TokenTypeEnum.EOF)
-            {
-                throw new Exception("Unexpected token: " + _currentToken.Lexeme);
-            }
-        }
-
-        //Consome o token esperado. 
-        //De acordo com cada função, o token esperado é diferente.
-        //Por exeplo, para uma deckaração de função, o token esperado é sempre: RESERVED ID LPAREN RPAREN. Ex.: void funcaoTeste(), int funcaoTeste()
-        //Neste caso, a nossa linguagem não aceita parâmetros e nem retorno de tipos definidos pelo usuário
-        public void Consume(TokenTypeEnum type)
-        {
-            if (_currentToken.Type.TokenTypeEnum == type)
-            {
-                _currentToken = _lexer.NextToken();
-            }
-            else
-            {
-                throw new Exception("Unexpected token: " + _currentToken.Lexeme);
-            }
-        }
-
-        public void Program()
-        {
-           // FunctionDeclaration();
-            MainFunction();
-        }
-
-        public void FunctionDeclaration()
-        {
-            if (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.RESERVED)
-            {
-                Consume(TokenTypeEnum.RESERVED);
-                if (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.ID)
-                {
-                    Consume(TokenTypeEnum.ID);
-                    Consume(TokenTypeEnum.LParen);
-                    Consume(TokenTypeEnum.RParen);
-                    Block();
-                    FunctionDeclaration();
-                }
-                else
-                {
-                    throw new Exception("Unexpected token: " + _currentToken.Lexeme);
-                }
-            }
-        }
-
-        public void MainFunction()
-        {
-            if (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.RESERVED)
-            {
-                Consume(TokenTypeEnum.RESERVED);
-                if (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.ID)
-                {
-                    Consume(TokenTypeEnum.ID);
-                    Consume(TokenTypeEnum.LParen);
-                    Consume(TokenTypeEnum.RParen);
-                    Block();
-                }
-                else
-                {
-                    throw new Exception("Unexpected token: " + _currentToken.Lexeme);
-                }
-            }
-        }
-
-        public void Block()
-        {
-            Consume(TokenTypeEnum.LBrace);
-            StatementList();
-            Consume(TokenTypeEnum.RBrace);
-        }
-
-        public void StatementList()
-        {
-            Statement();
-            StatementList();
-        }
-
-        public void Statement()
-        {
-            Consume(TokenTypeEnum.RESERVED);
-            Consume(TokenTypeEnum.ID);
-            Consume(TokenTypeEnum.ATTR);
-            Expression();
-            Consume(TokenTypeEnum.SColon);
-        }
-
-        public void Expression()
-        {
-            Term();
-            while (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.ADD || _currentToken.Type.TokenTypeEnum == TokenTypeEnum.SUB)
-            {
-                if (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.ADD)
-                {
-                    Consume(TokenTypeEnum.ADD);
-                    Term();
-                }
-                else if (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.SUB)
-                {
-                    Consume(TokenTypeEnum.SUB);
-                    Term();
-                }
-            }
-        }
-
-        public void Term()
-        {
-            Factor();
-            while (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.MUL || _currentToken.Type.TokenTypeEnum == TokenTypeEnum.DIV)
-            {
-                if (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.MUL)
-                {
-                    Consume(TokenTypeEnum.MUL);
-                    Factor();
-                }
-                else if (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.DIV)
-                {
-                    Consume(TokenTypeEnum.DIV);
-                    Factor();
-                }
-            }
-        }
-
-        public void Factor()
-        {
-            if (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.NUM)
-            {
-                Consume(TokenTypeEnum.NUM);
-            }
-            else if (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.LParen)
-            {
-                Consume(TokenTypeEnum.LParen);
-                Expression();
-                Consume(TokenTypeEnum.RParen);
-            }
-            else if (_currentToken.Type.TokenTypeEnum == TokenTypeEnum.ID)
-            {
-                Consume(TokenTypeEnum.ID);
-            }
-            else
-            {
-                throw new Exception("Unexpected token: " + _currentToken.Lexeme);
-            }
-        }
-
-
-    }
+    
 }
