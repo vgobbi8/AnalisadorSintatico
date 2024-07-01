@@ -3,6 +3,9 @@ using AnalisadorSintatico;
 
 Console.WriteLine("Hello, World!");
 
+var currentPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+var outputPath = System.IO.Path.Combine(currentPath, "output.txt");
+var outputStream = new System.IO.StreamWriter(outputPath);
 
 string source = @"
         var
@@ -27,11 +30,15 @@ List<Token> tokens = lexer.ScanTokens();
 
 try
 {
+    var parser1 = new Parser(tokens);
+    parser1.Parse();
+
     ParserAST parser = new ParserAST(tokens);
     var ast = parser.Parse();
 
-    CodeGenerator generator = new CodeGenerator();
+    CodeGenerator generator = new CodeGenerator(outputStream);
     ast.GenerateCode(generator);
+
 
     Console.WriteLine("Code generation completed successfully.");
 }
@@ -39,6 +46,8 @@ catch (Exception ex)
 {
     Console.WriteLine($"Parsing error: {ex.Message}");
 }
+
+outputStream.Close();
 
 //try
 //{
