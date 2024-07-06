@@ -7,14 +7,16 @@ using AnalisadorSintatico.Arvore;
 
 namespace AnalisadorSintatico
 {
-    public class CodeGenerator
+    public class GeradorDeCodigo
     {
         private int tempCount = 0;
         private int labelCount = 0;
 
+        private Dictionary<string, int> contagemLabels = new Dictionary<string, int>();
+
         private System.IO.StreamWriter outputStream;
 
-        public CodeGenerator(StreamWriter outputStream)
+        public GeradorDeCodigo(StreamWriter outputStream)
         {
             this.outputStream = outputStream;
         }
@@ -28,9 +30,24 @@ namespace AnalisadorSintatico
             return $"t{tempCount++}";
         }
 
-        public string GenerateLabel()
+        public string GenerateLabel(string nomeLabel = null)
         {
-            return $"L{labelCount++}";
+            if (string.IsNullOrWhiteSpace(nomeLabel))
+            {
+                return $"L{labelCount++}";
+            }
+            else
+            {
+                if (contagemLabels.ContainsKey(nomeLabel))
+                {
+                    contagemLabels[nomeLabel]++;
+                }
+                else
+                {
+                    contagemLabels[nomeLabel] = 1;
+                }
+                return nomeLabel + contagemLabels[nomeLabel];
+            }
         }
 
         public void EmitDeclaration(string type, string identifier)

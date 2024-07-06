@@ -7,32 +7,6 @@ using System.Threading.Tasks;
 using static AnalisadorSintatico.Enums;
 namespace AnalisadorSintatico
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Text.RegularExpressions;
-
-    public enum TokenType
-    {
-        Var, Int, Real, Identifier, Number, Semicolon, Comma,
-        Assign, Plus, Minus, Multiply, Divide, Power, Less, Greater, LessEqual, GreaterEqual, Equal, NotEqual,
-        While, If, Else, OpenParen, CloseParen, OpenBrace, CloseBrace, EndOfFile, Unknown
-    }
-
-    public class Token
-    {
-        public TokenType Type { get; }
-        public string Lexeme { get; }
-
-        public Token(TokenType type, string lexeme)
-        {
-            Type = type;
-            Lexeme = lexeme;
-        }
-
-        public override string ToString() => $"{Type} ({Lexeme})";
-    }
-
-
     public class Lexer
     {
         private static readonly Dictionary<string, TokenType> keywords = new Dictionary<string, TokenType>
@@ -140,7 +114,4 @@ namespace AnalisadorSintatico
 
         private char Peek() => IsAtEnd() ? '\0' : source[current];
     }
-
-
-
 }

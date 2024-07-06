@@ -30,32 +30,21 @@ List<Token> tokens = lexer.ScanTokens();
 
 try
 {
-    var parser1 = new Parser(tokens);
-    parser1.Parse();
 
+    //Árvore sintática
     ParserAST parser = new ParserAST(tokens);
     var ast = parser.Parse();
 
-    CodeGenerator generator = new CodeGenerator(outputStream);
-    ast.GenerateCode(generator);
+    //Gerador de código -> Vai escrevendo nesta stream
+    GeradorDeCodigo gerador = new GeradorDeCodigo(outputStream);
+    ast.GeraC3E(gerador);
 
 
-    Console.WriteLine("Code generation completed successfully.");
+    Console.WriteLine("Código C3E gerado com sucesso! Veja o arquivo output.txt");
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"Parsing error: {ex.Message}");
+    Console.WriteLine($"Erro de parse: {ex.Message}");
 }
 
 outputStream.Close();
-
-//try
-//{
-//    Parser parser = new Parser(tokens);
-//    parser.Parse();
-//    Console.WriteLine("Parsing completed successfully.");
-//}
-//catch (Exception ex)
-//{
-//    Console.WriteLine($"Parsing error: {ex.Message}");
-//}

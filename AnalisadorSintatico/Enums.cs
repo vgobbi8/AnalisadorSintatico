@@ -8,25 +8,12 @@ namespace AnalisadorSintatico
 {
     public class Enums
     {
-        public enum TokenTypeEnum
+        public enum TokenType
         {
-            ID,
-            NUM,
-            OP,
-            RESERVED,
-            EOF,
-            ADD,
-            SUB,
-            MUL,
-            DIV,
-            MOD,
-            ATTR,
-            LParen,
-            RParen,
-            LBrace,
-            RBrace,
-            SColon,
-            Literal
+            Var, Int, Real, Identifier, Number, Semicolon, Comma,
+            Assign, Plus, Minus, Multiply, Divide, Power, Less, Greater, LessEqual, GreaterEqual, Equal, NotEqual,
+            While, If, Else, OpenParen, CloseParen, OpenBrace, CloseBrace, EndOfFile, Unknown
         }
+
     }
 }
